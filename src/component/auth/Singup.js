@@ -1,6 +1,10 @@
-import React,{useState} from 'react'
+import React,{useState, useContext} from 'react'
+import {UserContext} from '../../UserContext'
+import {Redirect} from 'react-router-dom'
 
 const Singup = () => {
+    const {user, setUser} = useContext(UserContext)
+
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -9,23 +13,39 @@ const Singup = () => {
     const [passwordError, setPasswordError] = useState('')
     const submitHandler = async e => {
         e.preventDefault();
+        setEmailError('');
+        setNameError('');
+        setPasswordError('');
         console.log(name, email, password)
         try {
             const res = await fetch('http://localhost:5000/signup',
             {
                 method:'POST',
+                credentials: 'include',
                 body: JSON.stringify({name, email, password}),
                 headers: {'Content-Type': 'application/json'}
             });
             const data = await res.json();
             console.log(data);
+            if(data.errors){
+                setEmailError(data.errors.email)
+                setNameError(data.errors.name)
+                setPasswordError(data.errors.password)
+            }
+            if (data.user) {
+                setUser(data.user);
+            }
         } catch (error) {
             console.log(error);
         }
 
     }
-    return (
+    if(user){
+        return <Redirect to="/" />
+    }
+     return (
         <div className="row">
+            <h2>Sign up</h2>
         <form className="col s12" onSubmit={submitHandler}>
             <div className="row">
                 <div className="input-field col s12">
@@ -35,7 +55,7 @@ const Singup = () => {
                     onChange={e => setName(e.target.value)}
                     />
                     <div className="name error red-text">
-       
+                        {nameError}
                     </div>
                     <label htmlFor="name">Name</label>
                 </div>
@@ -48,7 +68,7 @@ const Singup = () => {
                     onChange={e => setEmail(e.target.value)}
                     />
                     <div className="email error red-text">
-                      
+                      {emailError}
                     </div>
                     <label htmlFor="email">Email</label>
                 </div>
@@ -61,7 +81,7 @@ const Singup = () => {
                     onChange={e => setPassword(e.target.value)}
                     />
                     <div className="password error red-text">
-                   
+                        {passwordError}
                     </div>
                     <label htmlFor="password">Password</label>
                 </div>
